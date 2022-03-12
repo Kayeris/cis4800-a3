@@ -22,6 +22,7 @@ function main() {
 	// Vertex shader program
 	const vsSource = `
 		attribute vec4 aVertexPosition;
+		attribute vec4 aVertexColor;
 		attribute vec3 aVertexNormal;
 		attribute vec2 aTextureCoord;
 		uniform mat4 uNormalMatrix;
@@ -29,9 +30,11 @@ function main() {
 		uniform mat4 uProjectionMatrix;
 		varying highp vec2 vTextureCoord;
 		varying highp vec3 vLighting;
+		varying lowp vec4 vColor;
 		void main(void) {
 			gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
 			vTextureCoord = aTextureCoord;
+			vColor = aVertexColor;
 			// Apply lighting effect
 			highp vec3 ambientLight = vec3(0.3, 0.3, 0.3);
 			highp vec3 directionalLightColor = vec3(1, 1, 1);
@@ -43,16 +46,18 @@ function main() {
 	`;
 
 	// Fragment shader program
-
 	const fsSource = `
 		varying highp vec2 vTextureCoord;
 		varying highp vec3 vLighting;
+		varying lowp vec4 vColor;
 		uniform sampler2D uSampler;
 		void main(void) {
 			highp vec4 texelColor = texture2D(uSampler, vTextureCoord);
-			gl_FragColor = vec4(texelColor.rgb * vLighting, texelColor.a);
+			gl_FragColor = vColor;
 		}
 	`;
+	// gl_FragColor = vec4(texelColor.rgb * vLighting, texelColor.a);
+
 
 	// Initialize a shader program; this is where all the lighting
 	// for the vertices and so forth is established.
@@ -63,18 +68,19 @@ function main() {
 	// for aVertexPosition, aVertexNormal, aTextureCoord,
 	// and look up uniform locations.
 	const programInfo = {
-	program: shaderProgram,
-	attribLocations: {
-		vertexPosition: gl.getAttribLocation(shaderProgram, 'aVertexPosition'),
-		vertexNormal: gl.getAttribLocation(shaderProgram, 'aVertexNormal'),
-		textureCoord: gl.getAttribLocation(shaderProgram, 'aTextureCoord'),
-	},
-	uniformLocations: {
-		projectionMatrix: gl.getUniformLocation(shaderProgram, 'uProjectionMatrix'),
-		modelViewMatrix: gl.getUniformLocation(shaderProgram, 'uModelViewMatrix'),
-		normalMatrix: gl.getUniformLocation(shaderProgram, 'uNormalMatrix'),
-		uSampler: gl.getUniformLocation(shaderProgram, 'uSampler'),
-	}
+		program: shaderProgram,
+		attribLocations: {
+			vertexPosition: gl.getAttribLocation(shaderProgram, 'aVertexPosition'),
+			vertexNormal: gl.getAttribLocation(shaderProgram, 'aVertexNormal'),
+			textureCoord: gl.getAttribLocation(shaderProgram, 'aTextureCoord'),
+			vertexColor: gl.getAttribLocation(shaderProgram, 'aVertexColor'),
+		},
+		uniformLocations: {
+			projectionMatrix: gl.getUniformLocation(shaderProgram, 'uProjectionMatrix'),
+			modelViewMatrix: gl.getUniformLocation(shaderProgram, 'uModelViewMatrix'),
+			normalMatrix: gl.getUniformLocation(shaderProgram, 'uNormalMatrix'),
+			uSampler: gl.getUniformLocation(shaderProgram, 'uSampler'),
+		}
 	};
 
 	// Here's where we call the routine that builds all the
@@ -105,51 +111,82 @@ function main() {
 // have one object -- a simple three-dimensional cube.
 //
 function initBuffers(gl) {
+	const colors = [
+		0.5,  0.1,  0.5,  0.1,    // white
+		0.3,  0.1,  0.3,  0.1,    // red
+		0.5,  0.1,  0.5,  0.1,    // green
+		0.3,  0.1,  0.3,  0.1,    // blue
+
+		0.5,  0.1,  0.5,  0.1,    // white
+		0.3,  0.1,  0.3,  0.1,    // red
+		0.5,  0.1,  0.5,  0.1,    // green
+		0.3,  0.1,  0.3,  0.1,    // blue
+
+		0.5,  0.1,  0.5,  0.1,    // white
+		0.3,  0.1,  0.3,  0.1,    // red
+		0.5,  0.1,  0.5,  0.1,    // green
+		0.3,  0.1,  0.3,  0.1,    // blue
+
+		0.5,  0.1,  0.5,  0.1,    // white
+		0.3,  0.1,  0.3,  0.1,    // red
+		0.5,  0.1,  0.5,  0.1,    // green
+		0.3,  0.1,  0.3,  0.1,    // blue
+
+		0.5,  0.1,  0.5,  0.1,    // white
+		0.3,  0.1,  0.3,  0.1,    // red
+		0.5,  0.1,  0.5,  0.1,    // green
+		0.3,  0.1,  0.3,  0.1,    // blue
+
+		0.5,  0.1,  0.5,  0.1,    // white
+		0.3,  0.1,  0.3,  0.1,    // red
+		0.5,  0.1,  0.5,  0.1,    // green
+		0.3,  0.1,  0.3,  0.1,    // blue
+
+		//giant square floor --> ALL GREY
+		0.5,  0.5,  0.5,  0.5,    
+		0.5,  0.5,  0.5,  0.5,    
+		0.5,  0.5,  0.5,  0.5,    
+		0.5,  0.5,  0.5,  0.5,    
+	];
+	
+	const colorBuffer = gl.createBuffer();
+	gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
+
 
 	// Create a buffer for the cube's vertex positions.
-
 	const positionBuffer = gl.createBuffer();
 
-	// Select the positionBuffer as the one to apply buffer
-	// operations to from here out.
-
+	// Select the positionBuffer as the one to apply buffer operations to from here out.
 	gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 
-	// Now create an array of positions for the cube.
-
-	// load vertex data from loaddata.js
+	// Now create an array of positions for the cube, load vertex data from loaddata.js
 	const positions = loadvertices();
 
 	// Now pass the list of positions into WebGL to build the
 	// shape. We do this by creating a Float32Array from the
 	// JavaScript array, then use it to fill the current buffer.
-
 	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
 
 	// Set up the normals for the vertices, so that we can compute lighting.
-
 	const normalBuffer = gl.createBuffer();
 	gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
 
 	// load normal data from loaddata.js
 	const vertexNormals = loadnormals();
 
-	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexNormals),
-				gl.STATIC_DRAW);
+	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexNormals), gl.STATIC_DRAW);
 
 	// Now set up the texture coordinates for the faces.
-
 	const textureCoordBuffer = gl.createBuffer();
 	gl.bindBuffer(gl.ARRAY_BUFFER, textureCoordBuffer);
 
 	// load texture coordinates data from loaddata.js
 	const textureCoordinates = loadtextcoords();
+	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(textureCoordinates), gl.STATIC_DRAW);
 
-	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(textureCoordinates),
-				gl.STATIC_DRAW);
-
-	// Build the element array buffer; this specifies the indices
-	// into the vertex arrays for each face's vertices.
+	// Build the element array buffer; 
+	// this specifies the indices into the vertex arrays for each face's vertices.
 
 	const indexBuffer = gl.createBuffer();
 	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
@@ -163,14 +200,14 @@ function initBuffers(gl) {
 
 	// Now send the element array to GL
 
-	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,
-		new Uint16Array(indices), gl.STATIC_DRAW);
+	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
 
 	return {
 		position: positionBuffer,
 		normal: normalBuffer,
 		textureCoord: textureCoordBuffer,
 		indices: indexBuffer,
+		color: colorBuffer,
 	};
 }
 
@@ -227,17 +264,13 @@ function drawScene(gl, programInfo, buffers, texture, deltaTime) {
 	gl.depthFunc(gl.LEQUAL);            // Near things obscure far things
 
 	// Clear the canvas before we start drawing on it.
-
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-	// Create a perspective matrix, a special matrix that is
-	// used to simulate the distortion of perspective in a camera.
-	// Our field of view is 45 degrees, with a width/height
-	// ratio that matches the display size of the canvas
-	// and we only want to see objects between 0.1 units
-	// and 100 units away from the camera.
+	// Create a perspective matrix, a special matrix that is used to simulate the distortion of perspective 
+	// in a camera. Our field of view is 45 degrees, with a width/height  ratio that matches the display size
+	// of the canvas and we only want to see objects between 0.1 units and 100 units away from the camera.
 
-	const fieldOfView = 80 * Math.PI / 180;   // in radians
+	const fieldOfView = 90 * Math.PI / 180;   // in radians
 	const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;	//aspect ratio
 	const zNear = 0.1;
 	const zFar = 100.0;
@@ -298,15 +331,22 @@ function drawScene(gl, programInfo, buffers, texture, deltaTime) {
 		const stride = 0;
 		const offset = 0;
 		gl.bindBuffer(gl.ARRAY_BUFFER, buffers.normal);
-		gl.vertexAttribPointer(
-			programInfo.attribLocations.vertexNormal,
-			numComponents,
-			type,
-			normalize,
-			stride,
-			offset);
-		gl.enableVertexAttribArray(
-			programInfo.attribLocations.vertexNormal);
+		gl.vertexAttribPointer(programInfo.attribLocations.vertexNormal, numComponents, type,
+			normalize, stride, offset);
+		gl.enableVertexAttribArray(programInfo.attribLocations.vertexNormal);
+	}
+
+	 // Tell WebGL how to pull out the colors from the color buffer into the vertexColor attribute.
+	{
+		const numComponents = 4;
+		const type = gl.FLOAT;
+		const normalize = false;
+		const stride = 0;
+		const offset = 0;
+		gl.bindBuffer(gl.ARRAY_BUFFER, buffers.color);
+		gl.vertexAttribPointer(programInfo.attribLocations.vertexColor,	numComponents,
+			type, normalize, stride, offset);
+		gl.enableVertexAttribArray(programInfo.attribLocations.vertexColor);
 	}
 
 	// Tell WebGL which indices to use to index the vertices
