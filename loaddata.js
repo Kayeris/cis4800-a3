@@ -5,15 +5,14 @@ let textureData = [];
 
 // return the number of vertices in the object
 function getVertexCount() {
-	return [46];
+	return [42];	//change to 42 from 46
 }
 
+function lightVertexCount(){
+	return [3];
+}
 
-// data for cube with four colour texture
-// uses vertices, normals, texture coordinates, and ppm data to draw image
-
-	// position array
-	// vertex positions
+	// position array --> vertex positions
 function loadvertices() {
 	return [
 		// Front face
@@ -59,10 +58,17 @@ function loadvertices() {
 		3.0,  -1.0, -3.0,
 
 		//my little dot
+		// -1.0,  2.0,  3.0,
+		//  1.0,  2.0,  3.0,
+		//  1.0,  2.5,  3.0,
+		// -1.0,  2.5,  3.0,
+	];
+}
+
+function loadLightVertices(){
+	return [
+		//my little dot
 		-1.0,  2.0,  3.0,
-		 1.0,  2.0,  3.0,
-		 1.0,  2.5,  3.0,
-		-1.0,  2.5,  3.0,
 	];
 }
 
@@ -120,6 +126,15 @@ function loadnormals() {
 	];
 }
 
+function loadLightNormals(){
+	return [
+		//my dot light
+		0.0,  0.0,  0.0,
+		0.0,  0.0,  0.0,
+		0.0,  0.0,  0.0,
+		0.0,  0.0,  0.0,
+	];
+}
 
 	// texture coordinates
 function loadtextcoords() {
@@ -173,7 +188,13 @@ function loadvertexindices() {
 		16, 17, 18,     16, 18, 19,   // right
 		20, 21, 22,     20, 22, 23,   // left
 		24, 25, 26,     24, 26, 27,   // GIANT SQUARE
-		28, 29, 30,     28, 30, 31,   // dot location
+		// 28, 29, 30,     28, 30, 31,   // dot location
+	];
+}
+
+function loadLightVertexIndice(){
+	return [
+		0,  1,  2,      0,  2,  3,    // front
 	];
 }
 

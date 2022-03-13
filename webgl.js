@@ -23,6 +23,8 @@ function main() {
 		return;
 	}
 
+	// var directionVals = [0.5, 0.1, 0.75]
+
   // Vertex shader program
 	const vsSource = `
 		attribute vec4 aVertexPosition;
@@ -34,12 +36,13 @@ function main() {
 		varying highp vec2 vTextureCoord;
 		varying highp vec3 vLighting;
 		void main(void) {
+			// vec3 lightPosition = vec3(loadLightVertices());
 			gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
 			vTextureCoord = aTextureCoord;
 			// Apply lighting effect
 			highp vec3 ambientLight = vec3(0.3, 0.3, 0.3);
 			highp vec3 directionalLightColor = vec3(1, 1, 1);
-			highp vec3 directionalVector = normalize(vec3(0.85, 0.8, 0.75));
+			highp vec3 directionalVector = normalize(vec3(0.8, 0.1, 0.75));
 			highp vec4 transformedNormal = uNormalMatrix * vec4(aVertexNormal, 1.0);
 			highp float directional = max(dot(transformedNormal.xyz, directionalVector), 0.0);
 			vLighting = ambientLight + (directionalLightColor * directional);
@@ -52,8 +55,8 @@ function main() {
 		varying highp vec3 vLighting;
 		uniform sampler2D uSampler;
 		void main(void) {
-		highp vec4 texelColor = texture2D(uSampler, vTextureCoord);
-		gl_FragColor = vec4(texelColor.rgb * vLighting, texelColor.a);
+			highp vec4 texelColor = texture2D(uSampler, vTextureCoord);
+			gl_FragColor = vec4(texelColor.rgb * vLighting, texelColor.a);
 		}
 	`;
 
@@ -101,58 +104,48 @@ function main() {
 // Initialize the buffers we'll need. For a3, we need one for the cube and for the light
 function initBuffers(gl) {
 
+//ALL THE STUFF FOR THE CUBE + THE PLANE 
+
 	// Create a buffer for the cube's vertex positions.
 	const positionBuffer = gl.createBuffer();
 	// Select the positionBuffer as the one to apply buffer operations to from here out.
-
 	gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-
-	// Now create an array of positions for the cube.
-		// load vertex data from loaddata.js
+	// Now create an array of positions for the cube. Load vertex data from loaddata.js
 	const positions = loadvertices();
 
-	// Now pass the list of positions into WebGL to build the
-	// shape. We do this by creating a Float32Array from the
-	// JavaScript array, then use it to fill the current buffer.
+	// Now pass the list of positions into WebGL to build the shape. We do this by creating a Float32Array 
+	// from the JavaScript array, then use it to fill the current buffer.
 	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
 
 	// Set up the normals for the vertices, so that we can compute lighting.
-
 	const normalBuffer = gl.createBuffer();
 	gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
 
-		// load normal data from loaddata.js
+	// load normal data from loaddata.js
 	const vertexNormals = loadnormals();
-
 	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexNormals), gl.STATIC_DRAW);
 
 	// Now set up the texture coordinates for the faces.
-
 	const textureCoordBuffer = gl.createBuffer();
 	gl.bindBuffer(gl.ARRAY_BUFFER, textureCoordBuffer);
 
-		// load texture coordinates data from loaddata.js
+	// load texture coordinates data from loaddata.js
 	const textureCoordinates = loadtextcoords();
-
 	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(textureCoordinates), gl.STATIC_DRAW);
 
 	// Build the element array buffer; this specifies the indices
 	// into the vertex arrays for each face's vertices.
-
 	const indexBuffer = gl.createBuffer();
 	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
 
-	// This array defines each face as two triangles, using the
-	// indices into the vertex array to specify each triangle's
-	// position.
+	// This array defines each face as two triangles, using the indices into the vertex array to 
+	// specify each triangle's position.
 
-		// load indices from loaddata.js
+	// load indices from loaddata.js
 	const indices = loadvertexindices();
 
 	// Now send the element array to GL
-
-	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,
-		new Uint16Array(indices), gl.STATIC_DRAW);
+	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
 
 	return {
 		position: positionBuffer,
@@ -208,7 +201,6 @@ function drawScene(gl, programInfo, buffers, texture, deltaTime) {
 	gl.depthFunc(gl.LEQUAL);            // Near things obscure far things
 
 	// Clear the canvas before we start drawing on it.
-
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
 	// Create a perspective matrix, a special matrix that is used to simulate the distortion of perspective 
@@ -233,7 +225,7 @@ function drawScene(gl, programInfo, buffers, texture, deltaTime) {
 	// mat4.translate(modelViewMatrix, modelViewMatrix, [-0.0, 0.0, -6.0]);
 	// mat4.rotateX(modelViewMatrix, modelViewMatrix, cubeRotation * 0.5, [0, 0, 1]);	//rotates towards me
 	// mat4.rotateY(modelViewMatrix, modelViewMatrix, cubeRotation * 0.7, [0, 1, 0]);	//rotates horizontally
-	// mat4.rotateZ(modelViewMatrix, modelViewMatrix, cubeRotation * 0.5, [0, 1, 0]); //rotates in a 2nd circle
+	mat4.rotateZ(modelViewMatrix, modelViewMatrix, cubeRotation * 0.5, [0, 1, 0]); //rotates in a 2nd circle
 
 	///STATIC VERSION
 	mat4.translate(modelViewMatrix, modelViewMatrix, [-0.0, 0.0, -6.0]);
@@ -242,7 +234,7 @@ function drawScene(gl, programInfo, buffers, texture, deltaTime) {
 				//destination matrix, matrix to rotate, amount to rotate in radians, axis to rotate about
 	mat4.rotateY(modelViewMatrix, modelViewMatrix, 0.7, [0, 1, 0]);	//rotates horizontally
 				//destination matrix, matrix to rotate, amount to rotate in radians, axis to rotate about
-	mat4.rotateZ(modelViewMatrix, modelViewMatrix, 0, [0, 1, 0]); //rotates in a 2nd circle
+	// mat4.rotateZ(modelViewMatrix, modelViewMatrix, 0, [0, 1, 0]); //rotates in a 2nd circle
 				//destination matrix, matrix to rotate, amount to rotate in radians, axis to rotate about
 
 	const normalMatrix = mat4.create();
