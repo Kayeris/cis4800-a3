@@ -11,7 +11,6 @@
 		<script src="webgl.js" defer></script>
 		<script src="loaddata.js" ></script>
 
-
 		<script type="text/javascript">
 		'use strict';
 
@@ -19,29 +18,127 @@
 				window.onkeydown = checkKey;
 			}
 
-			// process keyboard events
-			// keypress triggers changes in variables which affect drawing
+			//call the other
+			// process keyboard events! check Q and cycle through texture files
+			//open 
 			function checkKey(event) {
 				switch (event.keyCode) {
-				// number 1 
-				case 49: 
-					rotValue += Math.PI / 6;
-					break;
-			// letter a or A
-				case 65: 
-					if (ht == 0.1) {
-						ht = 0.2;
-					} else {
-						ht = 0.1;
-					}
+				case 81: 		//letter q ascii
+					if (txt == 0) {
+						txt = 1;
+						textureData = [];	//reset the array and clear instead of adding onto the end
+						parseFile(readers[0]);
+					} else if (txt == 1) {
+						txt = 2;
+						textureData = [];	//reset the array and clear instead of adding onto the end
+						parseFile(readers[1]);
+					} else if (txt == 2) {
+						txt = 3;
+						textureData = [];	//reset the array and clear instead of adding onto the end
+						parseFile(readers[2]);
+					} else if (txt == 3) {
+						txt = 4;
+						textureData = [];	//reset the array and clear instead of adding onto the end
+						parseFile(readers[3]);
+					} else if (txt == 4) {
+						txt = 5;
+						textureData = [];	//reset the array and clear instead of adding onto the end
+						parseFile(readers[4]);
+					} else if (txt == 5) {
+						txt = 6;
+						textureData = [];	//reset the array and clear instead of adding onto the end
+						parseFile(readers[5]);
+					} else if (txt == 6) {
+						txt = 7;
+						textureData = [];	//reset the array and clear instead of adding onto the end
+						parseFile(readers[6]);
+					} else if (txt == 7) {
+						txt = 8;
+						textureData = [];	//reset the array and clear instead of adding onto the end
+						parseFile(readers[7]);
+					} else if (txt == 8) {
+						txt = 9;
+						textureData = [];	//reset the array and clear instead of adding onto the end
+						parseFile(readers[8]);
+					} else if (txt == 9) {
+						txt = 0;
+						textureData = [];	//reset the array and clear instead of adding onto the end
+						parseFile(readers[9]);
+					} 
 					break;
 				}  // end switch
 			}
+
+			function parseFile(item){
+				//take Item, get the PromiseResult stuff and store it appropriately
+				item.then(
+					function(value) {
+						// console.log( "INSIDE THE FUNC" + value);	//SUCCESS!!!
+						//OK NOW
+						//go thru and store the necessary vals, set vars, fill arrays
+
+						const lines = value.split("\n");
+
+						// retrieve width and height data from pgm file
+						const dim = lines[2].split(" ");
+						imageWidth = dim[0];
+						imageHeight = dim[1];
+
+						
+						// read texture data from ppm file and store in the textureData array
+						//start at 3 bc the stuff before aing
+						for (let i = 3; i <= (imageHeight * imageWidth * 3 + 1); i++) {
+							textureData.push(lines[i], lines[i + 1], lines[i + 2]);	//RGB format
+							i = i + 2;
+						}
+						console.log(textureData);
+					},
+				);
+			}
+
 			window.onload = init;
 		</script>
 	</head>
+	<body>
+		<!-- file stuff -->
+		<input type="file" id="fileinput" multiple />	<!--lets me upload multiple files at once-->
+		<script>	//contains the function for file reading
+			function readFileAsText(file){
+                return new Promise(function(resolve,reject){
+                    let fr = new FileReader();
 
-  <body>
-    <canvas id="glcanvas" width="640" height="480"></canvas>
-  </body>
+                    fr.onload = function(){
+                        resolve(fr.result);
+                    };
+
+                    fr.onerror = function(){
+                        reject(fr);
+                    };
+
+                    fr.readAsText(file);
+                });
+            }
+			// Handle multiple fileuploads
+            document.getElementById("fileinput").addEventListener("change", function(ev){
+                let files = ev.currentTarget.files;
+                // let readers = [];
+
+                // Abort if there were no files selected
+                if(!files.length) return;
+
+                // Store promises in array
+                for(let i = 0;i < files.length;i++){
+                    readers.push(readFileAsText(files[i]));
+                }
+                
+                // Trigger Promises
+                // Promise.all(readers).then((values) => {
+                //     // Values will be an array that contains an item with the text of every selected file
+                //     // ["File1 Content", "File2 Content" ... "FileN Content"]
+                //     console.log(values);
+                // });
+            }, false);
+		</script>
+		<canvas id="glcanvas" width="640" height="480"></canvas>
+	</body>
 </html>
